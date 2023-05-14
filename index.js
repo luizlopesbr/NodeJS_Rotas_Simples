@@ -63,6 +63,46 @@ server.use(express.json())
 const cursos = ['Node JS', 'JavaScript', 'React Native']
 
 
+
+
+//MIDDLEWARE GLOBAL===================>
+//Auxilia a fazer debug
+server.use((req, res, next) => {
+    console.log(`Url Chamada: ${req.url}`)
+    return next()
+})
+
+
+//Checar se o parametro que precisa passar está vazio
+function checkCurso(req, res, next){
+    if(!req.body.name){
+        return res.status(400).json({error: "Nome do curso é obrigatório"})
+
+    }
+    //Se não tiver o nome retorna um erro, senão, prosegue com a requisição
+    return next()
+}
+
+
+
+//Checa se o curso que se quer buscar realmente existe
+function checkIndexCurso(req, res, next){
+    const curso = cursos[req.params.index]
+
+    if(!curso){
+        return res.status(400).json({ error: "O curso não existe"})
+    }
+
+    return next()
+}
+
+
+
+
+
+
+
+
 //Requisitar Todos os Cursos
 server.get('/cursos', (req, res) => {
     return res.json(cursos)
@@ -72,7 +112,7 @@ server.get('/cursos', (req, res) => {
 
 
 //Requisitar um Curso Específico
-server.get('/cursos/:index',(req, res) => {
+server.get('/cursos/:index',checkIndexCurso, (req, res) => {
     
 
     //const index = req.params.id
@@ -87,8 +127,18 @@ server.get('/cursos/:index',(req, res) => {
 
 
 
-//Criar uma informação, usa request body
-server.post('/cursos', (req, res) => {
+//Criar um novo Curso, usa request body
+
+
+// server.post('/cursos', (req, res) => {
+//     const { name } = req.body
+//     cursos.push(name)//enviar o name
+
+//     return res.json(cursos) //retornar pro Front-End
+// })
+
+
+server.post('/cursos', checkCurso, (req, res) => {
     const { name } = req.body
     cursos.push(name)//enviar o name
 
@@ -98,10 +148,19 @@ server.post('/cursos', (req, res) => {
 
 
 
-
 //Atualizando um curso
 //usa Route params
-server.put('/cursos/:index', (req, res) => {
+// server.put('/cursos/:index', (req, res) => {
+//     const { index } = req.params //index 
+//     const { name } = req.body  //nome que ele quer substituir
+
+//     cursos[index] = name
+
+//     return res.json(cursos) //retorna todos os cursos que estão atualizados
+// })
+
+
+server.put('/cursos/:index', checkCurso, checkIndexCurso, (req, res) => {
     const { index } = req.params //index 
     const { name } = req.body  //nome que ele quer substituir
 
@@ -111,8 +170,13 @@ server.put('/cursos/:index', (req, res) => {
 })
 
 
+
+
+
+
+
 //Excluindo algum curso
-server.delete('/cursos/:index', (req, res) => {
+server.delete('/cursos/:index', checkIndexCurso, (req, res) => {
     const { index } = req.params
 
     cursos.splice(index, 1) //deleta o índice que ele está passando na posição 1
